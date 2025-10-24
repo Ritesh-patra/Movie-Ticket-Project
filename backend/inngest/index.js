@@ -2,7 +2,10 @@ import { Inngest } from "inngest";
 import User from "../model/user.mode.js";
 
 // Create a client to send and receive events
-export const inngest = new Inngest({ id: "movie-ticket-booking" });
+export const inngest = new Inngest({
+  id: "movie-ticket-booking",
+  signingKey: process.env.INNGEST_SIGNIN_KEY,  
+});
 
 //inngest Function to save user date to a datebase
 const syncUserCreation = inngest.createFunction(
