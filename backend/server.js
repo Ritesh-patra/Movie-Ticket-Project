@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors'
 import connectDb from './db/db.js';
 import {clerkMiddleware} from '@clerk/express';
+
+await connectDb();
 import { serve } from "inngest/express";
 import { inngest, functions } from "./inngest/index.js"
 
@@ -10,7 +12,6 @@ import { inngest, functions } from "./inngest/index.js"
 const app = express();
 const port = 3000;
 
-await connectDb();
 
 //middleware
 app.use(express.json());
