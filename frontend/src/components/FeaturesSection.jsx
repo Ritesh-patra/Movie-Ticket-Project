@@ -3,7 +3,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";
 import MovieCard from "./MovieCard";
-import { dummyShowsData } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 
 const FeaturesSection = () => {

@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { dummyBookingData } from "../assets/assets";
 import Loading from "../components/Loading";
 import { dateFormat } from "../lib/dateFormat";
 import { useAppContext } from "../context/AppContext";
-import User from "../../../backend/model/user.mode";
 
 const ListBooking = () => {
   const currency = import.meta.env.VITE_CURRENCY || "₹";
@@ -31,7 +29,7 @@ const ListBooking = () => {
       getAllBooking();
 
     }
-  }, [User]);
+  }, [user]);
 
   if (isLoading) return <Loading />;
 
