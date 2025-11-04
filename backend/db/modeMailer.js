@@ -10,15 +10,21 @@ const transporter = nodemailer.createTransport({
 });
 
 
-const sendEmail = async ({to, subject, body}) => {
+const sendEmail = async ({ to, subject, body }) => {
+  try {
     const response = await transporter.sendMail({
-        from: process.env.SENDER_EMAIL,
-        to,
-        subject,
-        html: body
-    })
+      from: process.env.SENDER_EMAIL,
+      to,
+      subject,
+      html: body,
+    });
 
-    return response
-}
+    console.log(`Email sent to ${to}: messageId=${response.messageId}`);
+    return response;
+  } catch (error) {
+    console.error("Error sending email to", to, error);
+    throw error;
+  }
+};
 
 export default sendEmail;
