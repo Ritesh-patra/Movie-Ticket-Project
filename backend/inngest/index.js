@@ -2,6 +2,7 @@ import { Inngest } from "inngest";
 import User from "../model/user.mode.js";
 import Booking from "../model/booking.model.js";
 import Show from "../model/show.model.js";
+import sendEmail from "../db/modeMailer.js";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({
@@ -75,10 +76,67 @@ const releaseSeatsAndDeleteBooking = inngest.createFunction(
         });
         show.markModified("occupiedSeats");
         await show.save();
-        await Booking.findByIdAndDelete(booking._id)
+        await Booking.findByIdAndDelete(booking._id);
       }
     });
   }
 );
 
-export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdate, releaseSeatsAndDeleteBooking];
+//conformation function ot mail
+
+const sendBookingConfirmationEmail = inngest.createFunction(
+  {
+    id: "send-booking-confirmation-email",
+  },
+  { event: "app/show.booked" },
+  async ({ event, step }) => {
+    const { bookingId } = event.data;
+
+    const booking = await Booking.findById(bookingId)
+      .populate({
+        path: "show",
+        populate: { path: "movie", model: "Movie" },
+      })
+      .populate("user");
+    await sendEmail({
+      to: booking.user.email,
+      subject: `payment Confirmation: "${booking.show.movie.title}" booked`,
+      body: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <h2 style="color: #F84565;">Payment Confirmation 🎉</h2>
+
+  <h3>Hi ${booking.user.name},</h3>
+
+  <p>
+    Your booking for 
+    <strong style="color: #F84565;">"${booking.show.movie.title}"</strong> 
+    has been successfully confirmed!
+  </p>
+
+  <p>
+    <strong>Date:</strong> 
+    ${new Date(booking.show.showDateTime).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })}<br/>
+    <strong>Time:</strong> 
+    ${new Date(booking.show.showDateTime).toLocaleTimeString("en-US", { timeZone: "Asia/Kolkata" })}
+  </p>
+
+  <p>
+    We hope you have a wonderful time watching the movie! 🍿🎬
+  </p>
+
+  <p style="margin-top: 20px;">
+    Thanks for booking with us!<br/>
+    <strong style="color: #F84565;">QuickShow Team</strong>
+  </p>
+</div>
+`,
+    });
+  }
+);
+
+export const functions = [
+  syncUserCreation,
+  syncUserDeletion,
+  syncUserUpdate,
+  releaseSeatsAndDeleteBooking,
+  sendBookingConfirmationEmail
+];
