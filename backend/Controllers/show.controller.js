@@ -66,21 +66,34 @@ export const addShow = async (req, res) => {
     showsInput.forEach((show) => {
       const showDate = show.date;
       show.times.forEach((time) => {
-        // create Date using numeric components so it's treated as local time
-        // showDate is expected as 'YYYY-MM-DD' and time as 'HH:mm' or 'HH:mm:ss'
-        const [year, month, day] = showDate.split("-").map((v) => parseInt(v, 10));
-        const [hourStr, minuteStr] = time.split(":");
-        const hour = parseInt(hourStr, 10) || 0;
-        const minute = parseInt(minuteStr, 10) || 0;
+        // Accept two time formats sent from frontend:
+        // 1) Full ISO datetime string (includes 'T' and timezone/Z) -> parse directly
+        // 2) Plain time string 'HH:mm' -> build a local Date using numeric components
+        if (typeof time === 'string' && (time.includes('T') || /Z|\+|\-\d{2}:?\d{2}/.test(time))) {
+          // time is an ISO datetime (or contains timezone info)
+          const parsed = new Date(time);
+          showsToCreate.push({
+            movie: movieId,
+            showDateTime: parsed,
+            showPrice: showPrice,
+            occupiedSeats: {},
+          });
+        } else {
+          // fallback: time is like 'HH:mm' or 'HH:mm:ss' — create a Date from components
+          const [year, month, day] = showDate.split("-").map((v) => parseInt(v, 10));
+          const [hourStr, minuteStr] = String(time).split(":");
+          const hour = parseInt(hourStr, 10) || 0;
+          const minute = parseInt(minuteStr, 10) || 0;
 
-        const localDate = new Date(year, month - 1, day, hour, minute);
+          const localDate = new Date(year, month - 1, day, hour, minute);
 
-        showsToCreate.push({
-          movie: movieId,
-          showDateTime: localDate,
-          showPrice: showPrice,
-          occupiedSeats: {},
-        });
+          showsToCreate.push({
+            movie: movieId,
+            showDateTime: localDate,
+            showPrice: showPrice,
+            occupiedSeats: {},
+          });
+        }
       });
     });
 
@@ -122,12 +135,23 @@ export const getShow = async (req, res) => {
         const dateTime = {};
 
         shows.forEach((show) => {
+      // Debug: log stored Date values to help diagnose timezone mismatch
+      try {
+        console.log(`SHOW_DEBUG id=${show._id} showDateTime=${show.showDateTime} iso=${show.showDateTime.toISOString()} hours=${show.showDateTime.getHours()} minutes=${show.showDateTime.getMinutes()}`);
+      } catch (e) {
+        console.log('SHOW_DEBUG unable to log showDateTime', e);
+      }
             const date = show.showDateTime.toISOString().split("T")[0];
             if(!dateTime[date]){
                 dateTime[date] = []
             }
 
-            dateTime[date].push({time: show.showDateTime, showId: show._id})
+            // include both ISO (raw) and a server-formatted local time string to avoid client timezone issues
+            dateTime[date].push({
+              time: show.showDateTime.toISOString(),
+              timeStr: show.showDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+              showId: show._id,
+            })
         })
         res.json({success: true, movie, dateTime})
     } catch (error) {

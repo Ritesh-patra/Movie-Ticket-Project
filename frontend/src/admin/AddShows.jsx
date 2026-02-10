@@ -88,9 +88,7 @@ const AddShows = () => {
         return;
       }
 
-      const showsInput = Object.entries(dateTimeSelection).map(
-        ([date, times]) => ({ date, times }),
-      );
+        const showsInput = Object.entries(dateTimeSelection).map(([date, times]) => ({ date, times }));
 
       const payload = {
         movieId: selectedMovie,
