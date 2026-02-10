@@ -66,10 +66,18 @@ export const addShow = async (req, res) => {
     showsInput.forEach((show) => {
       const showDate = show.date;
       show.times.forEach((time) => {
-        const dateTimeString = `${showDate}T${time}`;
+        // create Date using numeric components so it's treated as local time
+        // showDate is expected as 'YYYY-MM-DD' and time as 'HH:mm' or 'HH:mm:ss'
+        const [year, month, day] = showDate.split("-").map((v) => parseInt(v, 10));
+        const [hourStr, minuteStr] = time.split(":");
+        const hour = parseInt(hourStr, 10) || 0;
+        const minute = parseInt(minuteStr, 10) || 0;
+
+        const localDate = new Date(year, month - 1, day, hour, minute);
+
         showsToCreate.push({
           movie: movieId,
-          showDateTime: new Date(dateTimeString),
+          showDateTime: localDate,
           showPrice: showPrice,
           occupiedSeats: {},
         });

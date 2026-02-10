@@ -10,6 +10,7 @@ const ListBooking = () => {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log(bookings);
   const getAllBooking = async () => {
     try {
       const { data } = await axios.get('/api/admin/all-bookings', {
@@ -27,7 +28,6 @@ const ListBooking = () => {
   useEffect(() => {
     if(user) {
       getAllBooking();
-
     }
   }, [user]);
 
@@ -50,7 +50,7 @@ const ListBooking = () => {
           <tbody className="text-sm font-light">
             {bookings.map((item, index) => (
               <tr key={index} className="border-b border-[#FD5965]/20 bg-[#FD5965]/5 even:bg-[#FD5965]/10">
-                <td className="p-2 min-w-5 pl-5">{item.user.name}</td>
+                <td className="p-2 min-w-5 pl-5">{item.user?.name ? item.user.name : "Unknown User"}</td>
                 <td className="p-2">{item.show.movie.title}</td>
                 <td className="p-2">
                   {dateFormat(item.show.showDateTime)}

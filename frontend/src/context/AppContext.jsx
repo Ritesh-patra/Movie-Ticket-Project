@@ -26,6 +26,7 @@ export const AppProvider = ({ children }) => {
           Authorization: `Bearer ${await getToken()}`,
         },
       });
+      console.log(data);
       setIsAdmin(data.isAdmin);
 
       if (!data.isAdmin && location.pathname.startsWith("/dashboard")) {
@@ -40,10 +41,12 @@ export const AppProvider = ({ children }) => {
   const fetchShows = async () => {
     try {
       const { data } = await axios.get("/api/show/all");
+      console.log("[AppContext] fetchShows response:", data);
       if (data.success) {
-        setShows(data.shows);
+        const showsData = data.shows || data.movies || [];
+        setShows(showsData);
       } else {
-        toast.error(data.message);
+        toast.error(data.message || "Failed to fetch shows");
       }
     } catch (error) {
       console.error(error);
@@ -70,7 +73,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     fetchShows();
-  }, []);
+  }, [shows]);
 
   useEffect(() => {
     if (user) {

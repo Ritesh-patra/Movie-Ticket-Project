@@ -35,13 +35,19 @@ const AddShows = () => {
 
   const handleDateTime = () => {
     if (!dateTimeInput) return;
-    const [date, time] = dateTimeInput.split("T");
-    if (!date || !time) return;
+
+    const selectedDate = new Date(dateTimeInput);
+
+    const date = selectedDate.toLocaleDateString("en-CA");
+    const time = selectedDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
     setDateTimeSelection((prev) => {
       const times = prev[date] || [];
       if (!times.includes(time)) {
-        // ✅ corrected here
         return { ...prev, [date]: [...times, time] };
       }
       return prev;
@@ -67,57 +73,58 @@ const AddShows = () => {
     });
   };
 
-  
+  const handleSubmit = async () => {
+    try {
+      // const token = await getToken();
+      setAddingShow(true);
 
+      if (
+        !selectedMovie ||
+        Object.keys(dateTimeSelection).length === 0 ||
+        !price
+      ) {
+        toast.error("Missing required fields");
+        setAddingShow(false);
+        return;
+      }
 
-const handleSubmit = async () => {
-  try {
-    // const token = await getToken();
-    setAddingShow(true);
+      const showsInput = Object.entries(dateTimeSelection).map(
+        ([date, times]) => ({ date, times }),
+      );
 
-    if (!selectedMovie || Object.keys(dateTimeSelection).length === 0 || !price) {
-      toast.error("Missing required fields");
-      setAddingShow(false);
-      return;
+      const payload = {
+        movieId: selectedMovie,
+        showPrice: Number(price),
+        showsInput,
+      };
+
+      console.log("📦 Payload sending:", payload); // Debug
+
+      // 🧨 API CALL
+      const { data } = await axios.post("/api/show/add", payload, {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+
+      console.log("📩 API Response:", data);
+
+      if (data.success) {
+        toast.success(data.message);
+        // reset all inputs
+        setSelectedMovie(null);
+        setDateTimeSelection({});
+        setPrice("");
+        setDateTimeInput("");
+      } else {
+        toast.error(data.message || "failed show add show");
+      }
+    } catch (error) {
+      console.error("❌ Error adding show:", error.response?.data || error);
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
-
-    const showsInput = Object.entries(dateTimeSelection).map(([date, times]) => ({ date, times }));
-
-    const payload = {
-      movieId: selectedMovie,
-      showPrice: Number(price),
-      showsInput,
-    };
-
-    console.log("📦 Payload sending:", payload); // Debug
-
-    // 🧨 API CALL
-    const { data } = await axios.post("/api/show/add", payload, {
-      headers: {
-        Authorization: `Bearer ${await getToken()}`,
-      },
-    });
-
-    console.log("📩 API Response:", data);
-
-    if (data.success) {
-      toast.success(data.message);
-      // reset all inputs
-      setSelectedMovie(null);
-      setDateTimeSelection({});
-      setPrice("");
-      setDateTimeInput("");
-    } else {
-      toast.error(data.message || "failed show add show");
-    }
-  } catch (error) {
-    console.error("❌ Error adding show:", error.response?.data || error);
-    toast.error(error.response?.data?.message || "Something went wrong");
-  } 
     setAddingShow(false);
-  
-};
-
+  };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -180,6 +187,7 @@ const handleSubmit = async () => {
           />
         </div>
       </div>
+
       {/* {dateandtime} */}
       <div className="mt-6">
         <label htmlFor="" className="block text-sm font-medium mb-2">
@@ -187,6 +195,7 @@ const handleSubmit = async () => {
         </label>
         <div className="inline-flex gap-5 border border-gray-600 p-1 pl-3 rounded-lg">
           <input
+            step="60"
             type="datetime-local"
             value={dateTimeInput}
             onChange={(e) => setDateTimeInput(e.target.value)}

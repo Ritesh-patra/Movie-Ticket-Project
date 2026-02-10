@@ -1,13 +1,11 @@
 import React from 'react'
-import { dummyShowsData } from '../assets/assets'
 import MovieCard from '../components/MovieCard'
 import BlurCircle from '../components/BlurCircle'
 import { useAppContext } from '../context/AppContext'
 
 const Movies = () => {
 
-    const { shows} = useAppContext();
-  
+    const { shows } = useAppContext();
 
   return shows.length > 0 ?(
     <div className='relative mx-auto my-40 mb-60 px-6 md:px-16 lg:px-20  xl:px-20 overflow-hidden min-h-[80vh]'>
